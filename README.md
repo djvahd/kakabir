@@ -148,7 +148,7 @@ classDiagram
         -int id
         -String kode
         -LocalDateTime tanggal
-        -Pengguna kasir
+        -int idKasir
         -int total
         -int bayar
         -int kembalian
@@ -162,7 +162,6 @@ classDiagram
         -int subtotal
     }
     Transaksi "1" *-- "*" DetailTransaksi
-    Transaksi --> Pengguna
 
     class CrudDao~T~ {
         <<interface>>
@@ -240,3 +239,56 @@ classDiagram
 | 4 | `Keranjang`, `TransaksiPanel`, `TransaksiDao.simpan` | F3, F4 |
 | 5 | `RiwayatPanel`, `DashboardFrame` dengan hak akses per peran, logout | F5, F6 |
 | 6 | README, tangkapan layar, pengecekan akhir | Dokumentasi |
+
+## 7. Cara Menjalankan
+
+1. Nyalakan **Laragon** (Start All), pastikan MySQL jalan di port 3306 (user `root`, tanpa password).
+2. Impor skema dan data awal. Aman diulang, data tidak dobel:
+   ```
+   mysql -uroot < sql/schema.sql
+   ```
+3. Compile dan jalankan:
+   ```
+   mvn compile exec:java
+   ```
+   Atau buka folder proyek di NetBeans (File > Open Project), lalu Run pada `Main`.
+4. Akun contoh: `admin` / `admin123` (Admin), `kasir` / `kasir123` (Kasir).
+
+Semua layar (`LoginFrame`, `DashboardFrame`, `MenuPanel`, `TransaksiPanel`, `RiwayatPanel`) dibuat sebagai **form NetBeans**: tiap kelas punya pasangan `.java` dan `.form` di paket `view`, jadi bisa dibuka di tab **Design** dan komponennya bisa digeser atau diubah propertinya. Jangan edit isi blok `initComponents` lewat tab Source, ubah lewat Design.
+
+## 8. Tangkapan Layar
+
+| Login | Menu (Admin) |
+|---|---|
+| ![Login](img/login.png) | ![Menu](img/menu.png) |
+
+| Transaksi (Kasir) | Riwayat |
+|---|---|
+| ![Transaksi](img/transaksi.png) | ![Riwayat](img/riwayat.png) |
+
+## 9. Pengujian
+
+Dites ke MySQL 8.4 sungguhan lewat objek Swing asli (tombol diklik lewat kode, dialog `JOptionPane` dijawab otomatis, pesannya dicatat). Hasil sebenarnya sama dengan yang diharapkan di semua skenario.
+
+| No | Skenario | Langkah | Hasil yang diharapkan | Hasil sebenarnya |
+|---|---|---|---|---|
+| 1 | Login password salah | Username `kasir`, password `salah`, klik Masuk | Pesan "Username atau password salah." | Sesuai |
+| 2 | Login kasir benar | `kasir` / `kasir123` | Dashboard dengan tab Transaksi dan Riwayat | Sesuai |
+| 3 | Login admin benar | `admin` / `admin123` | Dashboard dengan tab Menu dan Riwayat | Sesuai |
+| 4 | Tambah menu, harga bukan angka | Harga `abc`, klik Tambah | Pesan "Harga harus berupa angka." | Sesuai |
+| 5 | Tambah menu, harga minus | Harga `-5` | Pesan "Harga nggak boleh minus." | Sesuai |
+| 6 | Tambah menu, nama kosong | Nama berisi spasi | Pesan "Nama menu wajib diisi." | Sesuai |
+| 7 | Tambah menu valid | Nama `Tes UI`, harga `5000`, stok `5` | Baris baru muncul di tabel | Sesuai |
+| 8 | Ubah menu | Klik baris, harga jadi `7000`, klik Ubah | Harga di tabel jadi 7000 | Sesuai |
+| 9 | Hapus menu | Pilih baris, klik Hapus, jawab Yes | Baris hilang dari tabel | Sesuai |
+| 10 | Hapus menu yang sudah terjual | Pilih Es Teh, klik Hapus | Pesan "Menu ini udah pernah kejual, jadi nggak bisa dihapus." | Sesuai |
+| 11 | Transaksi: tambah ke keranjang | Es Teh jumlah 2 | 1 baris, total Rp 8.000 | Sesuai |
+| 12 | Transaksi: stok kurang | Jumlah 999 | Pesan stok tinggal sekian, keranjang tidak berubah | Sesuai |
+| 13 | Transaksi: jumlah bukan angka | Jumlah `abc` | Pesan "Jumlah harus berupa angka." | Sesuai |
+| 14 | Transaksi: bayar kurang | Bayar `1000` untuk total 8.000 | Pesan uang bayar kurang, keranjang tetap ada | Sesuai |
+| 15 | Transaksi normal | Bayar `10000` | Pesan tersimpan dengan kembalian Rp 2.000, keranjang kosong, stok berkurang | Sesuai |
+| 16 | Rollback | Item pertama cukup, stok item kedua habis saat bayar | Transaksi dibatalkan, stok item pertama dan jumlah transaksi tidak berubah | Sesuai |
+| 17 | Riwayat | Buka tab Riwayat, pilih baris pertama | Transaksi tampil, detail berisi Es Teh | Sesuai |
+| 18 | Logout | Klik Logout | Kembali ke LoginFrame, dashboard tertutup | Sesuai |
+
+Belum dites: tampilan di Design view NetBeans dan jalannya aplikasi di layar komputer lain (hanya dites di satu mesin).
