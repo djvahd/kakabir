@@ -1,19 +1,21 @@
 package com.badgenius.kakabir;
 
 import com.badgenius.kakabir.db.Koneksi;
+import com.badgenius.kakabir.view.LoginFrame;
 
-import java.sql.Connection;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 public class Main {
 
     public static void main(String[] args) {
-        // Sementara: cuma ngetes koneksi ke database. Nanti diganti buka LoginFrame.
-        try (Connection c = Koneksi.getConnection()) {
-            System.out.println("Konek ke database: " + c.getCatalog());
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
-            System.out.println("Gagal konek: " + e.getMessage());
-        } finally {
-            Koneksi.tutup();
+            // nggak masalah, pakai tampilan bawaan Swing
         }
+        // Pool koneksi ditutup waktu aplikasi keluar.
+        Runtime.getRuntime().addShutdownHook(new Thread(Koneksi::tutup));
+        SwingUtilities.invokeLater(() -> new LoginFrame().setVisible(true));
     }
 }
